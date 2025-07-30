@@ -83,6 +83,4 @@ export class AppData extends Model<IAppState> {
 			0
 		);
 	}
-
-
 }
