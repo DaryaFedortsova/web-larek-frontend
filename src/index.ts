@@ -11,36 +11,43 @@ import { Basket } from './components/common/Basket';
 import { AppData } from './components/AppData';
 import { CardInBasket } from './components/CardInBasket';
 import { Order } from './components/Order';
-import { IOrder } from './types';
+import { IContacts, IOrder } from './types';
+import { Contact } from './components/Contact';
+import { Success } from './components/common/Success';
+
+const templateCardCatalog = ensureElement<HTMLTemplateElement>('#card-catalog');
+const templateCardPreview = ensureElement<HTMLTemplateElement>('#card-preview');
+const templateBasket = ensureElement<HTMLTemplateElement>('#basket');
+const listBasket = ensureElement<HTMLTemplateElement>('#card-basket');
+const templateOrder = ensureElement<HTMLTemplateElement>('#order');
+const contactTemplate = ensureElement<HTMLTemplateElement>('#contacts');
+const templateSuccess = ensureElement<HTMLTemplateElement>('#success');
 
 const events = new EventEmitter();
 const api = new CardsApi(API_URL, CDN_URL);
+const appData = new AppData(events);
+const page = new Page(
+	document.querySelector('.page__wrapper') as HTMLElement,
+	events
+);
+const modal = new Modal(ensureElement('#modal-container'), events);
+const order = new Order(cloneTemplate(templateOrder), events);
+const contact = new Contact(cloneTemplate(contactTemplate), events);
+const templatePreview = cloneTemplate(templateCardPreview);
+const preview = new CardPreview(templatePreview, events);
+const template = cloneTemplate(templateBasket);
+const basket = new Basket(template, events);
 
 //мониторинг событий
 events.onAll(({ eventName, data }) => {
 	console.log(eventName, data);
-})
-
-const appData = new AppData(events);
-const page = new Page(document.querySelector('.page__wrapper') as HTMLElement,events);
-const templateCardCatalog = ensureElement<HTMLTemplateElement>('#card-catalog');
-const modal = new Modal(document.querySelector('#modal-container'), events);
-const templateCardPreview = ensureElement<HTMLTemplateElement>('#card-preview');
-const templateBasket = ensureElement<HTMLTemplateElement>('#basket');
-const basket = new Basket(cloneTemplate(templateBasket), events);
-const listBasket = ensureElement<HTMLTemplateElement>('#card-basket');
-const templateOrder = document.querySelector<HTMLTemplateElement>('#order');
-const orderForm = cloneTemplate(templateOrder) as HTMLFormElement;
-const order = new Order(orderForm, events);
-
-
+});
 
 //выводим данные товаров в галерею
 events.on('cards:changed', () => {
 	const itemsHTMLArray = appData.getCards().map((item) => {
 		const card = new CardItem(cloneTemplate(templateCardCatalog), events);
 		return card.render(item);
-		
 	});
 
 	page.render({ gallery: itemsHTMLArray });
@@ -49,11 +56,31 @@ events.on('cards:changed', () => {
 //открыть карточку в модальном окне предпросмотра
 events.on('card:open', ({ id }: { id: string }) => {
 	const card = appData.getCardById(id);
-	const templatePreview = cloneTemplate(templateCardPreview);
-	const preview = new CardPreview(templatePreview, events);
+
 	preview.render(card);
 	modal.content = templatePreview;
 	modal.open();
+
+	const inBasket = appData.basket.includes(id);
+	preview.button = inBasket ? 'Удалить' : 'В корзину';
+
+	preview.buttonDisabled = false;
+
+	if (card.price === null) {
+		preview.button = 'Недоступно';
+		preview.buttonDisabled = true;
+	}
+});
+
+events.on('preview:buttonChange', ({ id }: { id: string }) => {
+	const inBasket = appData.basket.includes(id);
+	if (inBasket) {
+		events.emit('card:remove-from-cart', { id });
+		preview.button = 'В корзину';
+	} else {
+		events.emit('card:add-to-cart', { id });
+		preview.button = 'Удалить';
+	}
 });
 
 //закрытие прокрутки страницы при открытии модалки
@@ -66,43 +93,94 @@ events.on('modal:close', () => {
 
 //открытие корзины
 events.on('basket:open', () => {
-	const template = cloneTemplate(templateBasket);
-	const basket = new Basket(template, events);
-
-	basket.items = appData.basket.map((id, index) => {
-		const card = appData.getCardById(id);
-         const basketItem = new CardInBasket(cloneTemplate(listBasket), events);
-		 basketItem.index = String(index + 1);
-		 basket.total = appData.getTotal();
-		return basketItem.render(card);
-	});
 	modal.content = template;
 	modal.open();
 });
 
 events.on('basket:changed', () => {
+	basket.items = appData.basket.map((id, index) => {
+		const card = appData.getCardById(id);
+		const basketItem = new CardInBasket(cloneTemplate(listBasket), events);
+		basketItem.index = String(index + 1);
+		return basketItem.render(card);
+	});
+	basket.total = appData.getTotal();
 	page.counter = appData.basket.length;
-})
+});
 
-
-events.on('card:add-to-cart', (data: {id: string}) => {
+events.on('card:add-to-cart', (data: { id: string }) => {
 	appData.addToBasket(data);
 	modal.close();
-})
+});
 
-events.on('card:remove-from-cart', (data: {id: string}) => {
+events.on('card:remove-from-cart', (data: { id: string }) => {
 	appData.removeFromBasket(data);
 	events.emit('basket:changed');
 });
 
 events.on('order:open', () => {
-	modal.content = orderForm;
-	modal.render({content: orderForm})
-	
+	modal.render({ content: order.render() });
 });
 
-events.on('payment:change', ({ field, value }: { field: keyof IOrder, value: string }) => {
-    appData.order[field] = value;});
+events.on('contacts:open', () => {
+	modal.render({ content: contact.render() });
+});
+
+events.on('payment:change',(data: { field: keyof IOrder; value: string }) => {
+		appData.setOrderField(data.field, data.value);
+	}
+);
+
+events.on('formErrorsOrder:change', (errors: Partial<IOrder>) => {
+	const { address, payment } = errors;
+	order.valid = !address && !payment;
+	order.errors = Object.values({ address, payment }).filter(Boolean).join('; ');
+});
+
+events.on('formErrorsContacts:change', (errors: Partial<IContacts>) => {
+	const { email, phone } = errors;
+	contact.valid = !email && !phone;
+	contact.errors = Object.values({ email, phone }).filter(Boolean).join('; ');
+});
+
+events.on(
+	/^order\..*:change/,
+	(data: { field: keyof IOrder; value: string }) => {
+		appData.setOrderField(data.field, data.value);
+	}
+);
+
+events.on(
+	/^contacts\..*:change/,
+	(data: { field: keyof IContacts; value: string }) => {
+		appData.setContactsField(data.field, data.value);
+	}
+);
+
+//отправить форму заказа
+events.on('contacts:submit', () => {
+	const orderData = {
+		...appData.order,
+		...appData.contacts,
+		items: appData.basket,
+		total: appData.getTotal(),
+	};
+	api
+		.orderSend(orderData)
+		.then((result) => {
+			const success = new Success(cloneTemplate(templateSuccess), {
+				onClick: () => {
+					modal.close();
+				},
+			});
+			appData.clearBasket();
+			modal.render({ content: success.render({ total: result.total }) });
+			
+		})
+		.catch((err) => {
+			console.error(err);
+		});
+});
 
 api
 	.getCatalog()

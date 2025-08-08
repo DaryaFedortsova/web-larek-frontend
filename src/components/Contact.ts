@@ -7,6 +7,7 @@ export class Contact extends Form<IContacts> {
 
 	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
+
 	}
 
 	set phone(value: string) {

@@ -10,7 +10,6 @@ export class CardItem extends Component<ICardItem> {
 	protected price: HTMLElement;
 	protected cardId: string;
 
-
 	constructor(container: HTMLElement, protected events: EventEmitter) {
 		super(container);
 		this.category = ensureElement('.card__category', this.container);
@@ -42,6 +41,11 @@ export class CardItem extends Component<ICardItem> {
 
 	set cardCategory(value: string) {
 		this.setText(this.category, value);
+		this.toggleClass(this.category, 'card__category_soft', value === 'софт-скил');
+		this.toggleClass(this.category, 'card__category_hard', value === 'хард-скил');
+		this.toggleClass(this.category, 'card__category_other', value === 'другое');
+		this.toggleClass(this.category, 'card__category_additional', value === 'дополнительное');
+		this.toggleClass(this.category, 'card__category_button', value === 'кнопка');
 	}
 
 	set cardPrice(price: number | null) {

@@ -4,7 +4,7 @@ import { Component } from './base/components';
 import { EventEmitter } from './base/events';
 
 export class CardPreview extends Component<ICardItem> {
-	protected button: HTMLButtonElement;
+	protected _button: HTMLButtonElement;
 	protected category: HTMLElement;
 	protected title: HTMLElement;
 	protected description: HTMLElement;
@@ -19,16 +19,23 @@ export class CardPreview extends Component<ICardItem> {
 		this.description = ensureElement('.card__text', this.container);
 		this.image = ensureElement('.card__image', this.container) as HTMLImageElement;
 		this.price = ensureElement('.card__price', this.container);
-        this.button = ensureElement('.card__button', this.container) as HTMLButtonElement;
+        this._button = ensureElement('.card__button', this.container) as HTMLButtonElement;
+		
+		this._button.addEventListener('click', () => {
+			this.events.emit('preview:buttonChange', { id: this.cardId});
+		})
 
-        this.button.addEventListener('click', () => {
-            this.events.emit('card:add-to-cart', { id: this.cardId});
-        });
+	}
+    set button (value: string) {
+		this._button.textContent = value;
 	}
 
+	set buttonDisabled(value: boolean) {
+		this._button.disabled = value
+	}
+	
     render(data: ICardItem):HTMLElement {
 		this.cardId = data.id;
-        // this.container.dataset.id = data.id;
         this.setImage(this.image, data.image, data.title);
         this.setText(this.category, data.category);
         this.setText(this.title, data.title);

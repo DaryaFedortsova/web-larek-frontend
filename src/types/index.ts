@@ -34,3 +34,22 @@ export interface IAppState {
 	order: IOrder | null;
 	contacts: IContacts | null;
 }
+
+export interface IOrderResult {
+    id: string;
+	total: number;
+}
+
+export type FormErrorsOrder = Partial<Record<keyof IOrder, string>>;
+export type FormErrorsContacts = Partial<Record<keyof IContacts, string>>;
+
+export interface IBasketView {
+	items: HTMLElement[];
+	total: number;
+	selected: string[];
+}
+
+export interface IPage {
+	counter: number;
+	gallery: HTMLElement[];
+}

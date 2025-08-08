@@ -1,4 +1,4 @@
-import { ICardItem } from '../types';
+import { ICardItem, IOrder, IOrderResult } from '../types';
 import { Api, ApiListResponse } from './base/api';
 
 export class CardsApi extends Api {
@@ -25,5 +25,7 @@ export class CardsApi extends Api {
 		}));
 	}
 
-	
+	orderSend(order: IOrder): Promise<IOrderResult> {
+		return this.post('/order', order).then((data: IOrderResult) => data);
+	}
 }

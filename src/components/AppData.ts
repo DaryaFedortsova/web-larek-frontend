@@ -1,11 +1,6 @@
-import { IAppState, ICardItem, IContacts, IOrder } from '../types';
+import { FormErrorsContacts, FormErrorsOrder, IAppState, ICardItem, IContacts, IOrder } from '../types';
 import { IEvents } from './base/events';
 import { Model } from './base/Model';
-import { CardItem } from './CardItem';
-
-export type GalleryChangeEvent = {
-	gallery: CardItem[];
-};
 
 export class AppData extends Model<IAppState> {
 	basket: string[] = [];
@@ -18,6 +13,8 @@ export class AppData extends Model<IAppState> {
 		email: '',
 		phone: '',
 	};
+	FormErrorsOrder: FormErrorsOrder = {};
+	FormErrorsContacts: FormErrorsContacts = {};
 
 	constructor(protected events: IEvents) {
 		super({ basket: [] }, events);
@@ -59,7 +56,7 @@ export class AppData extends Model<IAppState> {
 	addToBasket(item: { id: string }) {
 		if (!this.basket.includes(item.id)) {
 			this.basket.push(item.id);
-			this.emitChanges('basket:changed');
+			this.emitChanges('basket:changed')
 		}
 	}
 
@@ -69,7 +66,6 @@ export class AppData extends Model<IAppState> {
 			items: this.basket,
 			total: this.getTotal()
 		});
-		this.events.emit('basket:open');
 	}
 
 	clearBasket() {
@@ -83,4 +79,49 @@ export class AppData extends Model<IAppState> {
 			0
 		);
 	}
+
+	setOrderField(field: keyof IOrder, value: string) {
+		if ( field === 'payment') {
+			this.order.payment = value;
+		};
+		if ( field === 'address') {
+			this.order.address = value;
+		}
+		this.validateOrder()
+	}
+
+	validateOrder() {
+		const errors: typeof this.FormErrorsOrder = {};
+		if (!this.order.address) {
+			errors.address = 'Необходимо указать адрес';
+		}
+		if (!this.order.payment) {
+			errors.payment = 'Необходимо выбрать способ оплаты';
+		}
+		this.FormErrorsOrder = errors;
+		this.events.emit('formErrorsOrder:change', this.FormErrorsOrder);
+		return Object.keys(errors).length === 0;
+	}
+
+	setContactsField(field: keyof IContacts, value: string) {
+		this.contacts[field] = value;
+
+		if (this.validateContacts()) {
+			this.events.emit('contacts:change', this.contacts);
+		}
+	}
+
+	validateContacts() {
+		const errors: typeof this.FormErrorsContacts = {};
+		if (!this.contacts.email) {
+			errors.email = 'Необходимо указать email';
+		}
+		if (!this.contacts.phone) {
+			errors.phone = 'Необходимо указать телефон';
+		}
+		this.FormErrorsContacts = errors;
+		this.events.emit('formErrorsContacts:change', this.FormErrorsContacts);
+		return Object.keys(errors).length === 0;
+	}
+
 }
