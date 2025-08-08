@@ -87,7 +87,9 @@ export class AppData extends Model<IAppState> {
 		if ( field === 'address') {
 			this.order.address = value;
 		}
-		this.validateOrder()
+		if (this.validateOrder()) {
+			this.events.emit('order:change', this.order);
+		}
 	}
 
 	validateOrder() {
@@ -123,5 +125,20 @@ export class AppData extends Model<IAppState> {
 		this.events.emit('formErrorsContacts:change', this.FormErrorsContacts);
 		return Object.keys(errors).length === 0;
 	}
+ 
+	clearOrderField() {
+		this.order = {
+			payment: undefined,
+			address: ''
+		}
+		this.FormErrorsOrder = {};
+		this.emitChanges('order:change');
+	}
 
+	clearContactField() {
+		this.contacts.email = '';
+		this.contacts.phone = '';
+		this.FormErrorsContacts = {};
+		this.emitChanges('contacts:change');
+	}
 }

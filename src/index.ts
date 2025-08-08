@@ -119,11 +119,23 @@ events.on('card:remove-from-cart', (data: { id: string }) => {
 });
 
 events.on('order:open', () => {
-	modal.render({ content: order.render() });
+	appData.clearOrderField();
+	modal.render({ content: order.render({
+		payment: undefined,
+		address: '',
+		valid: false,
+		errors: [],
+	}) });
 });
 
 events.on('contacts:open', () => {
-	modal.render({ content: contact.render() });
+	appData.clearContactField();
+	modal.render({ content: contact.render({
+		email: '',
+		phone: '',
+		valid: false,
+		errors: [],
+	}) });
 });
 
 events.on('payment:change',(data: { field: keyof IOrder; value: string }) => {
@@ -174,12 +186,14 @@ events.on('contacts:submit', () => {
 				},
 			});
 			appData.clearBasket();
+			appData.clearOrderField();
+			appData.clearContactField();
 			modal.render({ content: success.render({ total: result.total }) });
 			
 		})
 		.catch((err) => {
-			console.error(err);
-		});
+			console.error(err); 
+		}); console.log('Заказ:', orderData)
 });
 
 api
