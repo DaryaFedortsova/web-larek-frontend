@@ -50,7 +50,6 @@ export class AppData extends Model<IAppState> {
 	removeFromBasket(item: { id: string }) {
 		this.basket = this.basket.filter((id) => id !== item.id);
 		this.emitChanges('basket:changed', {
-			items: this.basket,
 			total: this.getTotal(),
 		});
 	}
