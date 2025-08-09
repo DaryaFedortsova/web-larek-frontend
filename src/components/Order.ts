@@ -1,5 +1,5 @@
 import { IOrder } from '../types';
-import { ensureAllElements, ensureElement } from '../utils/utils';
+import { ensureElement } from '../utils/utils';
 import { IEvents } from './base/events';
 import { Form } from './common/Form';
 
@@ -42,6 +42,11 @@ export class Order extends Form<IOrder> {
 			events.emit('contacts:open');
 		})
 		
+	}
+
+	resetPayment() {
+		this.paymentCard.classList.remove('button_alt-active');
+		this.paymentCash.classList.remove('button_alt-active');
 	}
 
 	set address(value: string) {

@@ -14,7 +14,10 @@ export class CardItem extends Component<ICardItem> {
 		super(container);
 		this.category = ensureElement('.card__category', this.container);
 		this.title = ensureElement('.card__title', this.container);
-		this.image = ensureElement('.card__image',this.container) as HTMLImageElement;
+		this.image = ensureElement(
+			'.card__image',
+			this.container
+		) as HTMLImageElement;
 		this.price = ensureElement('.card__price', this.container);
 
 		this.container.addEventListener('click', () =>
@@ -27,9 +30,9 @@ export class CardItem extends Component<ICardItem> {
 		this.container.dataset.id = value;
 	}
 
-    get id(): string {
-        return this.cardId;
-    }
+	get id(): string {
+		return this.cardId;
+	}
 
 	set cardTitle(value: string) {
 		this.setText(this.title, value);
@@ -41,18 +44,34 @@ export class CardItem extends Component<ICardItem> {
 
 	set cardCategory(value: string) {
 		this.setText(this.category, value);
-		this.toggleClass(this.category, 'card__category_soft', value === 'софт-скил');
-		this.toggleClass(this.category, 'card__category_hard', value === 'хард-скил');
+		this.toggleClass(
+			this.category,
+			'card__category_soft',
+			value === 'софт-скил'
+		);
+		this.toggleClass(
+			this.category,
+			'card__category_hard',
+			value === 'хард-скил'
+		);
 		this.toggleClass(this.category, 'card__category_other', value === 'другое');
-		this.toggleClass(this.category, 'card__category_additional', value === 'дополнительное');
-		this.toggleClass(this.category, 'card__category_button', value === 'кнопка');
+		this.toggleClass(
+			this.category,
+			'card__category_additional',
+			value === 'дополнительное'
+		);
+		this.toggleClass(
+			this.category,
+			'card__category_button',
+			value === 'кнопка'
+		);
 	}
 
 	set cardPrice(price: number | null) {
 		if (typeof price === 'number') {
 			this.price.textContent = `${price} синапсов`;
 		} else if (price === null) {
-          this.price.textContent = `Бесценно`
+			this.price.textContent = `Бесценно`;
 		}
 	}
 

@@ -7,7 +7,6 @@ export class Contact extends Form<IContacts> {
 
 	constructor(container: HTMLFormElement, events: IEvents) {
 		super(container, events);
-
 	}
 
 	set phone(value: string) {
@@ -19,5 +18,4 @@ export class Contact extends Form<IContacts> {
 		(this.container.elements.namedItem('email') as HTMLInputElement).value =
 			value;
 	}
-
 }

@@ -15,22 +15,13 @@ export class Basket extends Component<IBasketView> {
 		this._total = ensureElement<HTMLElement>('.basket__price', container);
 		this.button = ensureElement<HTMLElement>('.basket__button', container);
 
-		
-			this.button.addEventListener('click', () => {
-				events.emit('order:open');
-			});
-		
-		this.items = [];
+		this.button.addEventListener('click', () => {
+			events.emit('order:open');
+		});
 	}
 
-	set items(items: HTMLElement[]) {
+	set listItems(items: HTMLElement[]) {
 		if (items.length) {
-			items.forEach((item, index) => {
-				const itemIndex = item.querySelector('.basket__item-index');
-				if (itemIndex) {
-					itemIndex.textContent = (index + 1).toString();
-				}
-			});
 			this.list.replaceChildren(...items);
 			this.setDisabled(this.button, false);
 		} else {
@@ -48,7 +39,7 @@ export class Basket extends Component<IBasketView> {
 	}
 
 	clear() {
-		this.items = [];
+		this.listItems = [];
 		this.total = 0;
 	}
 }

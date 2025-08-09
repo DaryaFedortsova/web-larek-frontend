@@ -37,6 +37,11 @@ const templatePreview = cloneTemplate(templateCardPreview);
 const preview = new CardPreview(templatePreview, events);
 const template = cloneTemplate(templateBasket);
 const basket = new Basket(template, events);
+const success = new Success(cloneTemplate(templateSuccess), {
+	onClick: () => {
+		modal.close();
+	},
+});
 
 //мониторинг событий
 events.onAll(({ eventName, data }) => {
@@ -98,7 +103,7 @@ events.on('basket:open', () => {
 });
 
 events.on('basket:changed', () => {
-	basket.items = appData.basket.map((id, index) => {
+	basket.listItems = appData.basket.map((id, index) => {
 		const card = appData.getCardById(id);
 		const basketItem = new CardInBasket(cloneTemplate(listBasket), events);
 		basketItem.index = String(index + 1);
@@ -120,28 +125,32 @@ events.on('card:remove-from-cart', (data: { id: string }) => {
 
 events.on('order:open', () => {
 	appData.clearOrderField();
-	modal.render({ content: order.render({
-		payment: undefined,
-		address: '',
-		valid: false,
-		errors: [],
-	}) });
+	order.resetPayment();
+	modal.render({
+		content: order.render({
+			payment: undefined,
+			address: '',
+			valid: false,
+			errors: [],
+		}),
+	});
 });
 
 events.on('contacts:open', () => {
 	appData.clearContactField();
-	modal.render({ content: contact.render({
-		email: '',
-		phone: '',
-		valid: false,
-		errors: [],
-	}) });
+	modal.render({
+		content: contact.render({
+			email: '',
+			phone: '',
+			valid: false,
+			errors: [],
+		}),
+	});
 });
 
-events.on('payment:change',(data: { field: keyof IOrder; value: string }) => {
-		appData.setOrderField(data.field, data.value);
-	}
-);
+events.on('payment:change', (data: { field: keyof IOrder; value: string }) => {
+	appData.setOrderField(data.field, data.value);
+});
 
 events.on('formErrorsOrder:change', (errors: Partial<IOrder>) => {
 	const { address, payment } = errors;
@@ -180,20 +189,14 @@ events.on('contacts:submit', () => {
 	api
 		.orderSend(orderData)
 		.then((result) => {
-			const success = new Success(cloneTemplate(templateSuccess), {
-				onClick: () => {
-					modal.close();
-				},
-			});
 			appData.clearBasket();
 			appData.clearOrderField();
 			appData.clearContactField();
 			modal.render({ content: success.render({ total: result.total }) });
-			
 		})
 		.catch((err) => {
-			console.error(err); 
-		}); console.log('Заказ:', orderData)
+			console.error(err);
+		});
 });
 
 api

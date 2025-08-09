@@ -1,4 +1,11 @@
-import { FormErrorsContacts, FormErrorsOrder, IAppState, ICardItem, IContacts, IOrder } from '../types';
+import {
+	FormErrorsContacts,
+	FormErrorsOrder,
+	IAppState,
+	ICardItem,
+	IContacts,
+	IOrder,
+} from '../types';
 import { IEvents } from './base/events';
 import { Model } from './base/Model';
 
@@ -18,19 +25,6 @@ export class AppData extends Model<IAppState> {
 
 	constructor(protected events: IEvents) {
 		super({ basket: [] }, events);
-
-		this.events.on('card:select', (data: { id: string }) => {
-			this.openCard(data.id);
-		});
-
-		this.events.on('card:add-to-cart', (data: { id: string }) => {
-			this.addToBasket(data);
-		});
-
-		this.events.on('card:remove-from-cart', (data: { id: string }) => {
-			this.removeFromBasket(data);
-		});
-		
 	}
 
 	addCards(items: ICardItem[]) {
@@ -46,17 +40,10 @@ export class AppData extends Model<IAppState> {
 		return this.cards;
 	}
 
-	openCard(id: string) {
-		const card = this.cards.find((items) => items.id === id);
-		if (card) {
-			this.events.emit('card:open', { ...card });
-		}
-	}
-
 	addToBasket(item: { id: string }) {
 		if (!this.basket.includes(item.id)) {
 			this.basket.push(item.id);
-			this.emitChanges('basket:changed')
+			this.emitChanges('basket:changed');
 		}
 	}
 
@@ -64,7 +51,7 @@ export class AppData extends Model<IAppState> {
 		this.basket = this.basket.filter((id) => id !== item.id);
 		this.emitChanges('basket:changed', {
 			items: this.basket,
-			total: this.getTotal()
+			total: this.getTotal(),
 		});
 	}
 
@@ -81,10 +68,10 @@ export class AppData extends Model<IAppState> {
 	}
 
 	setOrderField(field: keyof IOrder, value: string) {
-		if ( field === 'payment') {
+		if (field === 'payment') {
 			this.order.payment = value;
-		};
-		if ( field === 'address') {
+		}
+		if (field === 'address') {
 			this.order.address = value;
 		}
 		if (this.validateOrder()) {
@@ -125,12 +112,12 @@ export class AppData extends Model<IAppState> {
 		this.events.emit('formErrorsContacts:change', this.FormErrorsContacts);
 		return Object.keys(errors).length === 0;
 	}
- 
+
 	clearOrderField() {
 		this.order = {
 			payment: undefined,
-			address: ''
-		}
+			address: '',
+		};
 		this.FormErrorsOrder = {};
 		this.emitChanges('order:change');
 	}
